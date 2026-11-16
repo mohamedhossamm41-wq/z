@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mody Chat Pro - الاحترافي</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        html, body { height: 100%; overflow: hidden; background-color: #00a884; }
+        body { display: flex; justify-content: center; align-items: center; background-image: linear-gradient(to bottom, #00a884 130px, #dadbd4 130px); }
+        
+        .app-container { width: 100%; max-width: 1050px; height: 100%; max-height: 95vh; background: #f0f2f5; border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,0.2); display: flex; overflow: hidden; position: relative; }
+        .hidden { display: none !important; }
+        
+        #auth-screen { width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; background: #f0f2f5; position: absolute; top: 0; left: 0; z-index: 100; }
+        .auth-box { background: white; padding: 40px 30px; border-radius: 12px; width: 100%; max-width: 400px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; }
+        .auth-box h2 { color: #008069; margin-bottom: 10px; font-size: 28px; }
+        .auth-box p { color: #667781; font-size: 14px; margin-bottom: 25px; }
+        
+        input[type="text"] { width: 100%; padding: 14px 16px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; outline: none; text-align: center; }
+        input[type="text"]:focus { border-color: #00a884; }
+        
+        button { width: 100%; padding: 14px; margin-top: 15px; background: #008069; color: white; border: none; border-radius: 8px; font-size: 17px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        button:hover { background: #006e5a; }
+
+        #main-screen { width: 100%; height: 100%; display: flex; }
+        
+        .sidebar { width: 38%; height: 100%; border-left: 1px solid #e9edef; display: flex; flex-direction: column; background: #fff; }
+        .sidebar-header { background: #f0f2f5; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e9edef; flex-shrink: 0; }
+        .my-profile { display: flex; align-items: center; gap: 12px; }
+        .avatar-container { position: relative; }
+        .avatar { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; background: #ccc; }
+        
+        .status-dot { width: 12px; height: 12px; border-radius: 50%; background: #ccc; position: absolute; bottom: 2px; right: 2px; border: 2px solid #fff; }
+        .status-dot.online { background: #25d366; }
+
+        .search-container { padding: 8px 12px; background: #fff; border-bottom: 1px solid #e9edef; flex-shrink: 0; }
+        .search-container input { width: 100%; margin: 0; padding: 8px 14px; background: #f0f2f5; border: none; border-radius: 20px; font-size: 14px; outline: none; text-align: right; }
+        
+        .users-list { flex: 1; overflow-y: auto; background: #ffffff; }
+        .user-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid #f5f6f6; cursor: pointer; transition: 0.2s; }
+        .user-item:hover, .user-item.active { background: #f0f2f5; }
+        .user-item-info h4 { font-size: 16px; color: #111b21; font-weight: 500; }
+        .user-item-info p { font-size: 12px; color: #667781; margin-top: 3px; display: flex; align-items: center; gap: 5px; }
+
+        .sidebar-footer { padding: 10px; background: #f0f2f5; display: flex; gap: 8px; border-top: 1px solid #e9edef; flex-shrink: 0; }
+        .sidebar-footer button { margin: 0; font-size: 13px; padding: 8px; }
+
+        .chat-area { width: 62%; height: 100%; display: flex; flex-direction: column; background: #efeae2; position: relative; background-image: radial-gradient(#d1d7db 1px, transparent 1px); background-size: 20px 20px; }
+        .chat-header { background: #f0f2f5; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e9edef; flex-shrink: 0; height: 65px; }
+        .chat-user-info { display: flex; align-items: center; gap: 12px; }
+        
+        .messages-box { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-bottom: 75px; }
+        .empty-chat { flex: 1; display: flex; justify-content: center; align-items: center; color: #667781; font-size: 17px; background: #f8f9fa; height: 100%; }
+        
+        .msg { max-width: 70%; padding: 8px 12px 24px 12px; border-radius: 8px; font-size: 14px; line-height: 1.4; position: relative; word-wrap: break-word; box-shadow: 0 1px 0.5px rgba(0,0,0,0.13); cursor: pointer; }
+        .msg.me { background: #d9fdd3; align-self: flex-end; border-top-left-radius: 0; }
+        .msg.other { background: #ffffff; align-self: flex-start; border-top-right-radius: 0; }
+        .msg img { max-width: 100%; max-height: 280px; border-radius: 6px; margin-top: 4px; display: block; object-fit: contain; }
+        .msg audio { max-width: 230px; height: 38px; margin-top: 4px; display: block; }
+        .msg a.doc-link { display: inline-block; background: rgba(0,0,0,0.06); padding: 8px 12px; border-radius: 6px; color: #008069; text-decoration: none; font-weight: bold; }
+        .msg-deleted { font-style: italic; color: #8696a0 !important; }
+        
+        .msg-time { position: absolute; bottom: 4px; left: 8px; font-size: 10px; color: #667781; display: flex; align-items: center; gap: 3px; }
+        .ticks { font-size: 13px; font-weight: bold; color: #53bdeb !important; }
+        .ticks.sent-two { color: #667781 !important; }
+        .ticks.sent-one { color: #667781 !important; }
+
+        .chat-footer { position: absolute; bottom: 0; left: 0; width: 100%; height: 65px; background: #f0f2f5; padding: 10px 16px; display: flex; align-items: center; gap: 8px; border-top: 1px solid #e9edef; z-index: 50; flex-shrink: 0; }
+        .icon-btn { width: auto; padding: 8px; margin: 0; background: transparent; color: #54656f; font-size: 20px; border-radius: 50%; border: none; cursor: pointer; }
+        .icon-btn:hover { background: rgba(0,0,0,0.05); }
+        .recording { color: #e53935 !important; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+        .chat-footer input[type="text"] { flex: 1; margin: 0; border: none; border-radius: 20px; padding: 10px 16px; outline: none; background: #fff; font-size: 15px; text-align: right; }
+        .send-btn { width: auto; margin: 0; padding: 10px 18px; border-radius: 20px; background: #008069; }
+
+        @media (max-width: 768px) {
+            body { background-image: none; background-color: #fff; }
+            .app-container { height: 100%; max-width: 100%; border-radius: 0; box-shadow: none; }
+            .sidebar { width: 100%; height: 100%; }
+            .chat-area { width: 100%; height: 100%; display: none; position: absolute; top: 0; left: 0; z-index: 20; }
+            .app-container.in-chat .sidebar { display: none; }
+            .app-container.in-chat .chat-area { display: flex; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container" id="app-container">
+    <div id="auth-screen">
+        <div class="auth-box">
+            <h2>Mody Chat Pro</h2>
+            <p>اكتب اسمك الفريد وادخل الشات فوراً 🚀</p>
+            
+            <input type="text" id="reg-name" placeholder="اكتب اسمك هنا...">
+            <button id="fast-login-btn">دخول إلى الشات</button>
+        </div>
+    </div>
+
+    <div id="main-screen" class="hidden">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="my-profile">
+                    <div class="avatar-container">
+                        <img id="my-avatar" class="avatar" src="" alt="">
+                        <div class="status-dot online"></div>
+                    </div>
+                    <strong id="my-name">مستخدم</strong>
+                </div>
+            </div>
+            
+            <div class="search-container">
+                <input type="text" id="search-user" placeholder="🔍 ابحث عن أي شخص...">
+            </div>
+
+            <div class="users-list" id="users-list"></div>
+
+            <div class="sidebar-footer">
+                <button id="logout-btn" style="background:#6c757d;">خروج (أوفلاين)</button>
+                <button id="delete-account-btn" style="background:#dc3545;" title="حذف حسابي">🗑️ حذف حسابي</button>
+            </div>
+        </div>
+
+        <div class="chat-area">
+            <div id="no-chat-selected" class="empty-chat">
+                اختر أي شخص من القائمة للبدء في مراسلته 💬
+            </div>
+
+            <div id="active-chat" class="hidden" style="display:flex; flex-direction:column; height:100%; position:relative;">
+                <div class="chat-header">
+                    <div class="chat-user-info">
+                        <button id="back-btn" class="icon-btn" style="font-size:16px;">🔙</button>
+                        <div class="avatar-container">
+                            <img id="chat-user-avatar" class="avatar" src="" alt="">
+                            <div id="chat-user-dot" class="status-dot"></div>
+                        </div>
+                        <div>
+                            <h4 id="chat-user-name">اسم الشخص</h4>
+                            <small id="chat-user-status" style="color:#667781;"></small>
+                        </div>
+                    </div>
+                    <button id="clear-chat-btn" style="width:auto; padding:6px 12px; margin:0; background:#e53935; font-size:12px;">🗑️ مسح المحادثة</button>
+                </div>
+
+                <div class="messages-box" id="messages-box"></div>
+
+                <div class="chat-footer">
+                    <input type="file" id="file-input" class="hidden">
+                    <button class="icon-btn" id="attach-btn" title="إرسال صورة أو ملف">📎</button>
+                    <button class="icon-btn" id="mic-btn" title="تسجيل رسالة صوتية">🎤</button>
+                    <input type="text" id="msg-input" placeholder="اكتب رسالة...">
+                    <button class="send-btn" id="send-btn">إرسال</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, doc, setDoc, getDoc, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, deleteDoc, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyAh4oW4towcE7M5W1uivzTf23rr5h7u7i0",
+        authDomain: "mody-chat-27465.firebaseapp.com",
+        projectId: "mody-chat-27465",
+        storageBucket: "mody-chat-27465.firebasestorage.app",
+        messagingSenderId: "227409568699",
+        appId: "1:227409568699:web:a9f9a3c058443738259a9e",
+        measurementId: "G-NP1YFYRKY8"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    let currentUserData = null;
+    let selectedUser = null;
+    let unsubscribeMessages = null;
+    let allUsers = [];
+
+    const authScreen = document.getElementById('auth-screen');
+    const mainScreen = document.getElementById('main-screen');
+    const fastLoginBtn = document.getElementById('fast-login-btn');
+
+    window.onload = async () => {
+        const savedUid = localStorage.getItem('mody_chat_uid');
+        if (savedUid) {
+            const userDoc = await getDoc(doc(db, "users", savedUid));
+            if (userDoc.exists()) {
+                currentUserData = userDoc.data();
+                await setDoc(doc(db, "users", savedUid), { online: true }, { merge: true });
+                initApp();
+            } else {
+                localStorage.removeItem('mody_chat_uid');
+            }
+        }
+    };
+
+    async function setOffline() {
+        if (currentUserData) {
+            await setDoc(doc(db, "users", currentUserData.uid), { online: false }, { merge: true });
+        }
+    }
+
+    window.addEventListener('beforeunload', () => {
+        if (currentUserData) {
+            const userRef = doc(db, "users", currentUserData.uid);
+            setDoc(userRef, { online: false }, { merge: true });
+        }
+    });
+
+    fastLoginBtn.onclick = async () => {
+        const name = document.getElementById('reg-name').value.trim();
+        if (!name) return alert('⚠️ يرجى كتابة اسمك أولاً!');
+
+        fastLoginBtn.disabled = true;
+        fastLoginBtn.textContent = 'جاري التحقق من الاسم...';
+
+        try {
+            const usersSnap = await getDocs(collection(db, "users"));
+            let nameExists = false;
+            usersSnap.forEach(d => {
+                if (d.data().name.trim().toLowerCase() === name.toLowerCase()) {
+                    nameExists = true;
+                }
+            });
+
+            if (nameExists) {
+                alert('❌ هذا الاسم مسجل ومستخدم بالفعل! من فضلك اكتب اسماً آخر.');
+                fastLoginBtn.disabled = false;
+                fastLoginBtn.textContent = 'دخول إلى الشات';
+                return;
+            }
+
+            const uid = 'user_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+            const defaultAvatars = [
+                "https://cdn-icons-png.flaticon.com/512/149/149071.png",
+                "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
+                "https://cdn-icons-png.flaticon.com/512/2922/2922510.png"
+            ];
+            const photoURL = defaultAvatars[Math.floor(Math.random() * defaultAvatars.length)];
+
+            currentUserData = { uid, name, photoURL, online: true };
+            await setDoc(doc(db, "users", uid), currentUserData);
+            
+            localStorage.setItem('mody_chat_uid', uid);
+            initApp();
+        } catch (err) {
+            alert('حدث خطأ: ' + err.message);
+            fastLoginBtn.disabled = false;
+            fastLoginBtn.textContent = 'دخول إلى الشات';
+        }
+    };
+
+    function initApp() {
+        document.getElementById('my-name').textContent = currentUserData.name;
+        document.getElementById('my-avatar').src = currentUserData.photoURL;
+        authScreen.classList.add('hidden');
+        mainScreen.classList.remove('hidden');
+        loadUsers();
+    }
+
+    document.getElementById('delete-account-btn').onclick = async () => {
+        if (confirm('⚠️ هل أنت متأكد من حذف حسابك؟')) {
+            try {
+                await deleteDoc(doc(db, "users", currentUserData.uid));
+                localStorage.removeItem('mody_chat_uid');
+                alert('تم الحذف بنجاح!');
+                location.reload();
+            } catch (err) {
+                alert('خطأ: ' + err.message);
+            }
+        }
+    };
+
+    document.getElementById('logout-btn').onclick = async () => {
+        await setOffline();
+        localStorage.removeItem('mody_chat_uid');
+        location.reload();
+    };
+
+    function loadUsers() {
+        onSnapshot(collection(db, "users"), (snapshot) => {
+            allUsers = [];
+            snapshot.forEach(docSnap => {
+                if (docSnap.id !== currentUserData.uid) {
+                    allUsers.push(docSnap.data());
+                }
+            });
+
+            allUsers.sort((a, b) => (b.online === true) - (a.online === true));
+            renderUsers(allUsers);
+        });
+    }
+
+    function renderUsers(users) {
+        const list = document.getElementById('users-list');
+        list.innerHTML = '';
+        users.forEach(u => {
+            const div = document.createElement('div');
+            div.className = `user-item ${selectedUser?.uid === u.uid ? 'active' : ''}`;
+            div.innerHTML = `
+                <div class="avatar-container">
+                    <img class="avatar" src="${u.photoURL}" alt="">
+                    <div class="status-dot ${u.online ? 'online' : ''}"></div>
+                </div>
+                <div class="user-item-info">
+                    <h4>${u.name}</h4>
+                    <p>${u.online ? '🟢 متصل الآن' : '⚪ أوفلاين'}</p>
+                </div>
+            `;
+            div.onclick = () => openChat(u);
+            list.appendChild(div);
+        });
+    }
+
+    document.getElementById('search-user').oninput = (e) => {
+        const term = e.target.value.toLowerCase();
+        const filtered = allUsers.filter(u => u.name.toLowerCase().includes(term));
+        renderUsers(filtered);
+    };
+
+    function openChat(user) {
+        selectedUser = user;
+        document.getElementById('app-container').classList.add('in-chat');
+        document.getElementById('no-chat-selected').classList.add('hidden');
+        document.getElementById('active-chat').classList.remove('hidden');
+        document.getElementById('chat-user-name').textContent = user.name;
+        document.getElementById('chat-user-status').textContent = user.online ? 'متصل الآن' : 'غير متصل';
+        document.getElementById('chat-user-avatar').src = user.photoURL;
+        document.getElementById('chat-user-dot').className = `status-dot ${user.online ? 'online' : ''}`;
+
+        const chatId = [currentUserData.uid, user.uid].sort().join('_');
+        if (unsubscribeMessages) unsubscribeMessages();
+
+        const q = query(collection(db, "chats", chatId, "messages"), orderBy("createdAt", "asc"));
+        unsubscribeMessages = onSnapshot(q, async (snap) => {
+            const box = document.getElementById('messages-box');
+            box.innerHTML = '';
+            
+            let unreadUpdates = [];
+
+            snap.forEach(docSnap => {
+                const m = docSnap.data();
+                const div = document.createElement('div');
+                const isMe = m.senderId === currentUserData.uid;
+                div.className = `msg ${isMe ? 'me' : 'other'}`;
+
+                if (!isMe && !m.read) {
+                    unreadUpdates.push(updateDoc(docSnap.ref, { read: true }));
+                }
+
+                let contentHTML = '';
+                if (m.deleted) {
+                    contentHTML = `<span class="msg-deleted">🚫 تم حذف هذه الرسالة</span>`;
+                } else if (m.type === 'image') {
+                    contentHTML = `<img src="${m.fileData}" alt="صورة">`;
+                } else if (m.type === 'audio') {
+                    contentHTML = `<audio controls src="${m.fileData}"></audio>`;
+                } else if (m.type === 'file') {
+                    contentHTML = `<a class="doc-link" href="${m.fileData}" download="${m.fileName || 'ملف'}">📥 تحميل: ${m.fileName || 'مستند'}</a>`;
+                } else {
+                    contentHTML = `<span>${m.text}</span> ${m.edited ? '<small style="color:#8696a0; font-size:10px;">(معدلة)</small>' : ''}`;
+                }
+
+                let ticksHTML = '';
+                if (isMe && !m.deleted) {
+                    if (m.read) {
+                        ticksHTML = `<span class="ticks" title="تم القراءة">✓✓</span>`;
+                    } else if (user.online) {
+                        ticksHTML = `<span class="ticks sent-two" title="تم الاستلام">✓✓</span>`;
+                    } else {
+                        ticksHTML = `<span class="ticks sent-one" title="تم الإرسال">✓</span>`;
+                    }
+                }
+
+                div.innerHTML = `
+                    ${contentHTML}
+                    <div class="msg-time">
+                        <span>${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                        ${ticksHTML}
+                    </div>
+                `;
+
+                if (isMe && !m.deleted && m.type === 'text') {
+                    div.oncontextmenu = (e) => {
+                        e.preventDefault();
+                        showMsgOptions(docSnap.ref, m.text);
+                    };
+                    let pressTimer;
+                    div.ontouchstart = () => {
+                        pressTimer = setTimeout(() => {
+                            showMsgOptions(docSnap.ref, m.text);
+                        }, 700);
+                    };
+                    div.ontouchend = () => clearTimeout(pressTimer);
+                }
+
+                box.appendChild(div);
+            });
+
+            if (unreadUpdates.length > 0) {
+                await Promise.all(unreadUpdates);
+            }
+
+            box.scrollTop = box.scrollHeight;
+        });
+    }
+
+    async function showMsgOptions(msgRef, currentText) {
+        const choice = prompt("اختر الإجراء:\n1. تعديل الرسالة\n2. حذف الرسالة لدى الجميع\n\nاكتب رقم 1 أو 2:", "1");
+        if (choice === "1") {
+            const newText = prompt("عدل رسالتك:", currentText);
+            if (newText && newText.trim() !== "") {
+                await updateDoc(msgRef, { text: newText.trim(), edited: true });
+            }
+        } else if (choice === "2") {
+            if (confirm("هل تريد حذف هذه الرسالة لدى الجميع؟")) {
+                await updateDoc(msgRef, { deleted: true, text: "", fileData: null });
+            }
+        }
+    }
+
+    document.getElementById('back-btn').onclick = () => {
+        document.getElementById('app-container').classList.remove('in-chat');
+    };
+
+    document.getElementById('clear-chat-btn').onclick = async () => {
+        if (!selectedUser) return;
+        if (confirm('هل أنت متأكد من مسح هذه المحادثة؟')) {
+            const chatId = [currentUserData.uid, selectedUser.uid].sort().join('_');
+            const msgRef = collection(db, "chats", chatId, "messages");
+            const snapshot = await getDocs(msgRef);
+            const deletePromises = snapshot.docs.map(d => deleteDoc(d.ref));
+            await Promise.all(deletePromises);
+            alert('تم مسح المحادثة!');
+        }
+    };
+
+    async function sendMessage(payload) {
+        if (!selectedUser) return;
+        try {
+            const chatId = [currentUserData.uid, selectedUser.uid].sort().join('_');
+            await addDoc(collection(db, "chats", chatId, "messages"), {
+                senderId: currentUserData.uid,
+                createdAt: serverTimestamp(),
+                read: false,
+                deleted: false,
+                edited: false,
+                ...payload
+            });
+        } catch (err) {
+            alert('فشل الإرسال: ' + err.message);
+        }
+    }
+
+    document.getElementById('send-btn').onclick = async () => {
+        const input = document.getElementById('msg-input');
+        const text = input.value.trim();
+        if (!text) return;
+        input.value = '';
+        await sendMessage({ type: 'text', text });
+    };
+
+    document.getElementById('msg-input').onkeypress = (e) => {
+        if (e.key === 'Enter') document.getElementById('send-btn').click();
+    };
+
+    function compressImage(file) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const maxWidth = 800;
+                    const scale = maxWidth / img.width;
+                    canvas.width = img.width > maxWidth ? maxWidth : img.width;
+                    canvas.height = img.width > maxWidth ? img.height * scale : img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    resolve(canvas.toDataURL('image/jpeg', 0.7));
+                };
+            };
+        });
+    }
+
+    const fileInput = document.getElementById('file-input');
+    document.getElementById('attach-btn').onclick = () => fileInput.click();
+
+    fileInput.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file || !selectedUser) return;
+
+        try {
+            if (file.type.startsWith('image/')) {
+                const compressedBase64 = await compressImage(file);
+                await sendMessage({ type: 'image', fileData: compressedBase64, fileName: file.name });
+            } else {
+                if (file.size > 750 * 1024) {
+                    alert('⚠️ الحد الأقصى للملفات هو 750 كيلوبايت.');
+                } else {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = async () => {
+                        await sendMessage({ type: 'file', fileData: reader.result, fileName: file.name });
+                    };
+                }
+            }
+        } catch (err) {
+            alert('خطأ: ' + err.message);
+        } finally {
+            fileInput.value = '';
+        }
+    };
+
+    let mediaRecorder;
+    let audioChunks = [];
+    const micBtn = document.getElementById('mic-btn');
+
+    micBtn.onclick = async () => {
+        if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream, { audioBitsPerSecond: 32000 });
+                audioChunks = [];
+                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    if (audioBlob.size > 750 * 1024) {
+                        alert('⚠️ التسجيل طويل جداً!');
+                        return;
+                    }
+                    const reader = new FileReader();
+                    reader.readAsDataURL(audioBlob);
+                    reader.onloadend = async () => {
+                        await sendMessage({ type: 'audio', fileData: reader.result });
+                    };
+                    stream.getTracks().forEach(t => t.stop());
+                };
+                mediaRecorder.start();
+                micBtn.classList.add('recording');
+                micBtn.textContent = '⏹️';
+            } catch (err) {
+                alert('يرجى السماح بالوصول للميكروفون');
+            }
+        } else {
+            mediaRecorder.stop();
+            micBtn.classList.remove('recording');
+            micBtn.textContent = '🎤';
+        }
+    };
+</script>
+</body>
+</html>
